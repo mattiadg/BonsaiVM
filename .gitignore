@@ -1,0 +1,8 @@
+# Build target
+build/
+
+# std import 
+gcm.cache
+*.cmake
+# ide
+.vscode
