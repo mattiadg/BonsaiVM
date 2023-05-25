@@ -60,7 +60,7 @@ std::vector<unsigned char> make(Operation op);
 
 std::vector<unsigned char> make(Operation op, int16_t arg);
 
-int16_t ReadInt16(unsigned char*);
+int16_t ReadInt16(std::array<unsigned char, 2>);
 constexpr bool is_system_little_endian();
 std::array<unsigned char, 2> WriteInt16(int16_t value);
 

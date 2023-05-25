@@ -42,7 +42,7 @@ std::array<unsigned char, 2> WriteInt16(int16_t value){
     return bytes;
 }
 
-int16_t ReadInt16(unsigned char* bytes) 
+int16_t ReadInt16(std::array<unsigned char, 2> bytes) 
 {
     int16_t value;
     if (is_system_little_endian())
@@ -50,8 +50,7 @@ int16_t ReadInt16(unsigned char* bytes)
         std::array<unsigned char, 2> _bytes {bytes[1], bytes[0]};
         value = std::bit_cast<int16_t>(_bytes);
     } else {
-        std::array<unsigned char, 2> _bytes {bytes[0], bytes[1]};
-        value = std::bit_cast<int16_t>(_bytes);
+        value = std::bit_cast<int16_t>(bytes);
     }
     return value;
 }

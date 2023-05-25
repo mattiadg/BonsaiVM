@@ -55,7 +55,7 @@ void VM::run()
         {
             case OpConstantInt:
             {
-                auto operand_ref = ReadInt16(&instructions[ip]);
+                auto operand_ref = ReadInt16({instructions[ip], instructions[ip+1]});
                 push(constants[operand_ref]);
                 break;
             }
@@ -110,14 +110,14 @@ void VM::run()
                 auto top = pop();
                 if (top == falseValue) 
                 {
-                    int64_t jmp_offset = static_cast<int64_t>(ReadInt16(&instructions[ip]));
+                    int64_t jmp_offset = static_cast<int64_t>(ReadInt16({instructions[ip], instructions[ip+1]}));
                     ip += jmp_offset - 1 - byte_count;
                 }
                 break;
             }
             case OpJump:
             {
-                int64_t jmp_offset = static_cast<int64_t>(ReadInt16(&instructions[ip]));
+                int64_t jmp_offset = static_cast<int64_t>(ReadInt16({instructions[ip], instructions[ip+1]}));
                 ip += jmp_offset - 1 - byte_count;
             }
             default:
