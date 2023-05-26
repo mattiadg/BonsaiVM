@@ -132,6 +132,21 @@ void VM::run()
                 } else if (cmp == 0)
                 {
                     globals.push_back(top);
+                } else
+                {
+                    throw global_index_too_large_exception();
+                }
+                break;
+            }
+            case OpReadGlobal:
+            {
+                int64_t idx = static_cast<int64_t>(ReadInt16({instructions[ip], instructions[ip+1]}));
+                if(idx < static_cast<int64_t>(globals.size()))
+                {
+                    push(globals[idx]);
+                } else
+                {
+                    throw global_index_too_large_exception();
                 }
                 break;
             }

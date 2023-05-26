@@ -381,6 +381,27 @@ TEST(OpTest, OpWriteGlobalSameIndexAssertions)
     EXPECT_EQ(testVM.globals[0], Value{5});
 }
 
+TEST(OpTest, OpReadGlobalAssertions)
+{
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstantInt, 0),
+                make(OpWriteGlobal, 0),
+                make(OpConstantInt, 1),
+                make(OpReadGlobal, 0),
+                make(OpAddInt),
+                make(OpPop),
+            }
+        ));
+    auto constants = std::vector{Value{5}, Value{1}};
+    auto bc = ByteCode{instrs, constants};
+    auto testVM = VM(bc);
+    testVM.run();
+    EXPECT_EQ(testVM.globals[0], Value{5});
+    EXPECT_EQ(testVM.stack[0], Value{6});
+}
+
 std::vector<unsigned char> make_instructions(std::vector<std::vector<unsigned char>> instrs) 
 {
     std::vector<unsigned char> instructions;
