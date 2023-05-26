@@ -22,6 +22,7 @@ typedef enum : unsigned char{
     OpBang,
     OpJumpFalse,
     OpJump,
+    OpWriteGlobal,
 } Operation;
 
 struct Instruction
@@ -54,6 +55,7 @@ static std::array<Definition, 256> opDefinitions {
     Definition{"OpBang", 0, {}},
     Definition{"OpJumpFalse", 1, {2}},
     Definition{"OpJump", 1, {2}},
+    Definition{"OpWriteGlobal", 1, {2}},
 };
 
 std::vector<unsigned char> make(Operation op);

@@ -347,6 +347,40 @@ TEST(OpTest, OpUnaryMinusAssertions)
     EXPECT_EQ(testVM.stack[0], Value{-5});
 }
 
+TEST(OpTest, OpWriteGlobalAssertions)
+{
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstantInt, 0),
+                make(OpWriteGlobal, 0),
+            }
+        ));
+    auto constants = std::vector{Value{5}};
+    auto bc = ByteCode{instrs, constants};
+    auto testVM = VM(bc);
+    testVM.run();
+    EXPECT_EQ(testVM.globals[0], Value{5});
+}
+
+TEST(OpTest, OpWriteGlobalSameIndexAssertions)
+{
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstantInt, 0),
+                make(OpConstantInt, 1),
+                make(OpWriteGlobal, 0),
+                make(OpWriteGlobal, 0),
+            }
+        ));
+    auto constants = std::vector{Value{5}, Value{1.0}};
+    auto bc = ByteCode{instrs, constants};
+    auto testVM = VM(bc);
+    testVM.run();
+    EXPECT_EQ(testVM.globals[0], Value{5});
+}
+
 std::vector<unsigned char> make_instructions(std::vector<std::vector<unsigned char>> instrs) 
 {
     std::vector<unsigned char> instructions;

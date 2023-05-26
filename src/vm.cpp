@@ -119,6 +119,21 @@ void VM::run()
             {
                 int64_t jmp_offset = static_cast<int64_t>(ReadInt16({instructions[ip], instructions[ip+1]}));
                 ip += jmp_offset - 1 - byte_count;
+                break;
+            }
+            case OpWriteGlobal:
+            {
+                auto top = pop();
+                int64_t idx = static_cast<int64_t>(ReadInt16({instructions[ip], instructions[ip+1]}));
+                auto cmp = idx <=> static_cast<int64_t>(globals.size());
+                if(cmp < 0)
+                {
+                    globals[idx] = top;
+                } else if (cmp == 0)
+                {
+                    globals.push_back(top);
+                }
+                break;
             }
             default:
                 break;

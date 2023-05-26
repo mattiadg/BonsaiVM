@@ -5,6 +5,7 @@
 #include <exception>
 #include <memory>
 #include <variant>
+#include <vector>
 
 #include "../include/code.hpp"
 
@@ -23,6 +24,7 @@ struct VM
     std::array<Value, 256> stack;
     std::vector<Value> constants;
     std::vector<unsigned char> instructions;
+    std::vector<Value> globals;
 
     // registers
     int64_t ip;
@@ -57,6 +59,14 @@ class empty_stack_exception: public std::exception
   virtual const char* what() const throw()
   {
     return "No items to remove from the stack";
+  }
+};
+
+class global_index_too_large_exception: public std::exception
+{
+  virtual const char* what() const throw()
+  {
+    return "Tried to write to a too large index for the global variables";
   }
 };
 
