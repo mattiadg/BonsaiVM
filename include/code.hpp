@@ -7,14 +7,14 @@
 #include <vector>
 
 typedef enum : unsigned char{
-    OpConstantInt,
+    OpConstant,
     OpTrue,
     OpFalse,
     OpPop,
-    OpAddInt,
-    OpSubInt,
-    OpMulInt,
-    OpDivInt,
+    OpAdd,
+    OpSub,
+    OpMul,
+    OpDiv,
     OpEqual,
     OpGreaterThan,
     OpGreaterEqual,

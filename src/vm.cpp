@@ -53,7 +53,7 @@ void VM::run()
 
         switch (op)
         {
-            case OpConstantInt:
+            case OpConstant:
             {
                 auto operand_ref = ReadInt16({instructions[ip], instructions[ip+1]});
                 push(constants[operand_ref]);
@@ -69,10 +69,10 @@ void VM::run()
                 push(falseValue);
                 break;
             }
-            case OpAddInt:
-            case OpSubInt:
-            case OpMulInt:
-            case OpDivInt:
+            case OpAdd:
+            case OpSub:
+            case OpMul:
+            case OpDiv:
             {
                 executeBinaryOp(static_cast<Operation>(op));
                 break;
@@ -164,16 +164,16 @@ void VM::executeBinaryOp(Operation op)
     Value value;
     switch(op)
     {
-        case OpAddInt:
+        case OpAdd:
             value = operand_left + operand_right;
             break;
-        case OpSubInt:
+        case OpSub:
             value = operand_left - operand_right;
             break;
-        case OpMulInt:
+        case OpMul:
             value = operand_left * operand_right;
             break;
-        case OpDivInt:
+        case OpDiv:
             value = operand_left / operand_right;
             break;
         default:
@@ -199,7 +199,7 @@ void VM::executeBinaryComparison(Operation op)
         case OpGreaterEqual:
             value = operand_left >= operand_right;
             break;
-        case OpDivInt:
+        case OpDiv:
             value = operand_left / operand_right;
             break;
         default:
