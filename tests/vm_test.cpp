@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "../src/vm.hpp"
+#include "../include/object.hpp"
 
 std::vector<unsigned char> make_instructions(std::vector<std::vector<unsigned char>>);
 
@@ -340,7 +341,7 @@ TEST(OpTest, OpUnaryMinusAssertions)
                 make(OpUnaryMinus),
             }
         ));
-    auto constants = std::vector{Value{5}, Value{2}};
+    auto constants = std::vector<Value>{5, 2};
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
@@ -374,7 +375,7 @@ TEST(OpTest, OpWriteGlobalSameIndexAssertions)
                 make(OpWriteGlobal, 0),
             }
         ));
-    auto constants = std::vector{Value{5}, Value{1.0}};
+    auto constants = std::vector<Value>{5, 1.0};
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
@@ -394,12 +395,44 @@ TEST(OpTest, OpReadGlobalAssertions)
                 make(OpPop),
             }
         ));
-    auto constants = std::vector{Value{5}, Value{1}};
+    auto constants = std::vector<Value>{5, 1};
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
     EXPECT_EQ(testVM.globals[0], Value{5});
     EXPECT_EQ(testVM.stack[0], Value{6});
+}
+
+TEST(OpTest, OpConstantStringAssertions)
+{
+    ByteCode bc {make(OpConstant, 0), std::vector<Value>{new B_String{"test string"}}};
+    auto testVM = VM(bc);
+    EXPECT_EQ(testVM.sp, 0);
+    testVM.run();
+    auto string_value = get_string(testVM.stack[0]);
+    EXPECT_EQ(string_value, "test string");
+    delete std::get<B_Object*>(testVM.stack[0]);
+}
+
+TEST(OpTest, OpAddStringAssertions)
+{
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstant, 0),
+                make(OpConstant, 1),
+                make(OpAdd),
+                make(OpPop),
+            }
+        ));
+    auto constants = std::vector<Value>{new B_String{"string1"}, new B_String{"string2"}};
+    ByteCode bc {instrs, constants};
+    auto testVM = VM(bc);
+    testVM.run();
+    auto string_value = get_string(testVM.stack[0]);
+    EXPECT_EQ(string_value, "string1string2");
+    delete std::get<B_Object*>(constants[0]);
+    delete std::get<B_Object*>(constants[1]);
 }
 
 std::vector<unsigned char> make_instructions(std::vector<std::vector<unsigned char>> instrs) 

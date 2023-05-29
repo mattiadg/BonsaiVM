@@ -4,13 +4,11 @@
 #include <array>
 #include <exception>
 #include <memory>
-#include <variant>
 #include <vector>
 
 #include "../include/code.hpp"
+#include "../include/object.hpp"
 
-
-typedef std::variant<int64_t, _Float64, bool> Value;
 
 struct ByteCode 
 {

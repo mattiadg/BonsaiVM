@@ -20,6 +20,7 @@ add_executable(
   tests/vm_test.cpp
   src/vm.cpp
   src/code.cpp
+  src/object.cpp
 )
 
 set_property(TARGET vm_test PROPERTY CXX_STANDARD 20)

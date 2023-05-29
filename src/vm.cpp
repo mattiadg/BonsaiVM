@@ -159,23 +159,47 @@ void VM::run()
 
 void VM::executeBinaryOp(Operation op)
 {
-    auto operand_right = std::get<int64_t>(pop());
-    auto operand_left = std::get<int64_t>(pop());
+    Value operand_right_ = pop();
+    Value operand_left_ = pop();
     Value value;
     switch(op)
     {
         case OpAdd:
-            value = operand_left + operand_right;
+        {
+            if (std::holds_alternative<int64_t>(operand_left_) && std::holds_alternative<int64_t>(operand_right_))
+            {
+                auto operand_left = std::get<int64_t>(operand_left_);
+                auto operand_right = std::get<int64_t>(operand_right_);
+                value = operand_left + operand_right;
+            } else if (std::holds_alternative<B_Object*>(operand_left_) && std::holds_alternative<B_Object*>(operand_right_))
+            {
+                auto operand_left = std::get<B_Object*>(operand_left_);
+                auto operand_right = std::get<B_Object*>(operand_right_);
+                value = Value(new B_String(dynamic_cast<B_String*>(operand_left)->value + dynamic_cast<B_String*>(operand_right)->value));
+            }
             break;
+        }
         case OpSub:
+        {
+            auto operand_left = std::get<int64_t>(operand_left_);
+            auto operand_right = std::get<int64_t>(operand_right_);
             value = operand_left - operand_right;
             break;
+        }
         case OpMul:
+        {
+            auto operand_left = std::get<int64_t>(operand_left_);
+            auto operand_right = std::get<int64_t>(operand_right_);
             value = operand_left * operand_right;
             break;
+        }
         case OpDiv:
+        {
+            auto operand_left = std::get<int64_t>(operand_left_);
+            auto operand_right = std::get<int64_t>(operand_right_);
             value = operand_left / operand_right;
             break;
+        }
         default:
             auto def = opDefinitions[op];
             throw invalid_instruction("Found instruction " + def.opName);
