@@ -16,15 +16,24 @@ struct ByteCode
     std::vector<Value> constants;
 };
 
+class B_GC
+{
+  public:
+  B_GC(B_Allocator&&);
+  void mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals);
+
+  B_Allocator& allocator;
+};
+
 struct VM
 {
-    // memory areas
+    // Memory areas
     std::array<Value, 256> stack;
     std::vector<Value> constants;
     std::vector<unsigned char> instructions;
     std::vector<Value> globals;
 
-    // registers
+    // Registers
     int64_t ip;
     int64_t sp;
 
@@ -32,8 +41,11 @@ struct VM
     Value trueValue {true};
     Value falseValue {false};
 
-    VM();
-    VM(ByteCode);
+    // Allocator
+    B_GC bgc;
+
+    VM(B_Allocator&& alloc = B_Allocator());
+    VM(const ByteCode&, B_Allocator&& = B_Allocator());
 
     void push(Value);
     Value pop();
@@ -42,6 +54,7 @@ struct VM
 
     void executeBinaryOp(Operation op);
     void executeBinaryComparison(Operation op);
+    void run_gc();
 };
 
 class full_stack_exception: public std::exception

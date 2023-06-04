@@ -435,6 +435,32 @@ TEST(OpTest, OpAddStringAssertions)
     delete std::get<B_Object*>(constants[1]);
 }
 
+TEST(GcTest, MarkAndSweepAssertions)
+{
+    B_Allocator allocator {};
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstant, 0),
+                make(OpConstant, 0),
+                make(OpConstant, 0),
+                make(OpConstant, 0),
+                make(OpAdd),
+                make(OpAdd),
+                make(OpAdd),
+                make(OpPop),
+            }
+        ));
+    auto constants = std::vector<Value>{allocator.alloc("string1")};
+    ByteCode bc {instrs, constants};
+    auto testVM = VM(bc, std::move(allocator));
+    testVM.run();
+    testVM.run_gc();
+    EXPECT_EQ(testVM.sp, 0);
+    EXPECT_EQ(testVM.bgc.allocator.memory.size(), 1);
+    EXPECT_EQ(dynamic_cast<B_String*>(allocator.memory[0]), dynamic_cast<B_String*>(std::get<B_Object*>(testVM.constants[0])));
+}
+
 std::vector<unsigned char> make_instructions(std::vector<std::vector<unsigned char>> instrs) 
 {
     std::vector<unsigned char> instructions;

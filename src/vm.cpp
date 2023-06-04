@@ -2,15 +2,14 @@
 
 #include "vm.hpp"
 
-VM::VM() 
+VM::VM(B_Allocator&& alloc) 
 : stack(std::array<Value, 256>()), constants(std::vector<Value>()), 
-instructions(std::vector<unsigned char>()), ip(0), sp(0) 
+instructions(std::vector<unsigned char>()), ip(0), sp(0), bgc(std::move(alloc))
 {
-    
 }
 
-VM::VM(ByteCode bc)
-: stack(std::array<Value, 256>()), constants(bc.constants), instructions(bc.instructions), ip(0), sp(0) 
+VM::VM(const ByteCode& bc, B_Allocator&& alloc)
+: stack(std::array<Value, 256>()), constants(bc.constants), instructions(bc.instructions), ip(0), sp(0), bgc(std::move(alloc))
 {
 
 }
@@ -175,7 +174,7 @@ void VM::executeBinaryOp(Operation op)
             {
                 auto operand_left = std::get<B_Object*>(operand_left_);
                 auto operand_right = std::get<B_Object*>(operand_right_);
-                value = Value(new B_String(dynamic_cast<B_String*>(operand_left)->value + dynamic_cast<B_String*>(operand_right)->value));
+                value = Value(bgc.allocator.alloc(dynamic_cast<B_String*>(operand_left)->value + dynamic_cast<B_String*>(operand_right)->value));
             }
             break;
         }
@@ -231,4 +230,65 @@ void VM::executeBinaryComparison(Operation op)
             throw invalid_instruction("Found instruction " + def.opName);
     }
     push(value);
+}
+
+void VM::run_gc()
+{
+    bgc.mark_and_sweep(stack, sp, constants, globals);
+}
+
+B_GC::B_GC(B_Allocator&& alloc)
+: allocator(alloc)
+{
+}
+
+void B_GC::mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals)
+{
+    std::vector<B_Object*> mark_stack = {};
+
+    // seed stack
+    for (auto i = 0; i < sp; ++i)
+    {
+        if (std::holds_alternative<B_Object*>(stack[i]))
+        {
+            auto* obj = std::get<B_Object*>(stack[i]);
+            obj->set_used();
+            mark_stack.push_back(obj);
+        }
+    }
+    // seed constants
+    for (uint i = 0; i < constants.size(); ++i)
+    {
+        if (std::holds_alternative<B_Object*>(constants[i]))
+        {
+            auto* obj = std::get<B_Object*>(constants[i]);
+            obj->set_used();
+            mark_stack.push_back(obj);
+        }
+    }
+    // seed globals
+    for (uint i = 0; i < globals.size(); ++i)
+    {
+        if (std::holds_alternative<B_Object*>(globals[i]))
+        {
+            auto* obj = std::get<B_Object*>(globals[i]);
+            obj->set_used();
+            mark_stack.push_back(obj);
+        }
+    }
+    // should now cycle inside the objects, but we still don't have objects containing other objects
+
+    // sweep the others
+    for (std::vector<B_Object*>::iterator obj = allocator.memory.begin(); obj != allocator.memory.end();)
+    {
+        if (!(*obj)->used())
+        {
+            delete *obj;
+            obj = allocator.memory.erase(obj);
+        } else 
+        {
+            (*obj)->set_not_used();
+            ++obj;
+        }
+    }
 }
