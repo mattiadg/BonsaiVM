@@ -149,6 +149,24 @@ void VM::run()
                 }
                 break;
             }
+            case OpArray:
+            {
+                const auto num_values = ReadInt16({instructions[ip], instructions[ip+1]});
+                if (num_values > sp + 1)
+                {
+                    throw empty_stack_exception();
+                } else 
+                {
+                    const auto start_elem = sp - num_values;
+                    B_Object* arr = bgc.allocator.alloc(stack.begin()+start_elem, stack.begin() + sp);
+                    for (int i = 0, d = num_values; i < d; ++i)
+                    {
+                        pop();
+                    }
+                    push(arr);
+                }
+                break;
+            }
             default:
                 break;
             }

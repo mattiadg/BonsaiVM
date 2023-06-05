@@ -435,6 +435,29 @@ TEST(OpTest, OpAddStringAssertions)
     delete std::get<B_Object*>(constants[1]);
 }
 
+TEST(OpTest, OpArrayAssertions)
+{
+    B_Allocator allocator {};
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstant, 0),
+                make(OpConstant, 1),
+                make(OpConstant, 2),
+                make(OpArray, 3),
+                make(OpPop),
+            }
+        ));
+    auto constants = std::vector<Value>{1, 3.5, allocator.alloc("string1")};
+    ByteCode bc {instrs, constants};
+    auto testVM = VM(bc);
+    testVM.run();
+    auto array_value = get_array(testVM.stack[0]);
+    EXPECT_EQ(std::get<int64_t>(array_value[0]), 1);
+    EXPECT_EQ(std::get<_Float64>(array_value[1]), 3.5);
+    EXPECT_EQ(get_string(array_value[2]), "string1");
+}
+
 TEST(GcTest, MarkAndSweepAssertions)
 {
     B_Allocator allocator {};

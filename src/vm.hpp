@@ -69,7 +69,7 @@ class empty_stack_exception: public std::exception
 {
   virtual const char* what() const throw()
   {
-    return "No items to remove from the stack";
+    return "Not enough items to remove from the stack";
   }
 };
 

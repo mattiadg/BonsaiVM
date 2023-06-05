@@ -23,6 +23,8 @@ private:
     bool _used;
 };
 
+using Value = std::variant<int64_t, _Float64, bool, B_Object*>;
+
 class B_String: public B_Object
 {
 public:
@@ -32,14 +34,13 @@ public:
     std::string value;
 };
 
-using Value = std::variant<int64_t, _Float64, bool, B_Object*>;
-
-struct B_VM_Memory 
+class B_Array: public B_Object
 {
-    std::array<Value, 256>& stack; 
-    int64_t& sp;
-    std::vector<Value>& constants;
-    std::vector<Value>& globals;
+    public:
+    B_Array(Value* first, Value* last) : values(first, last)  {};
+    virtual ~B_Array() override {};
+
+    std::vector<Value> values;
 };
 
 class B_Allocator {
@@ -51,10 +52,14 @@ class B_Allocator {
     B_Allocator(B_Allocator&&);
 
     B_Object* alloc(std::string data);
+    B_Object* alloc(Value* first, Value* last);
 
     std::vector<B_Object*> memory;
 };
 
 std::string get_string(Value obj);
+std::vector<Value> get_array(Value obj);
+
+std::ostream& operator<<(std::ostream& lhs, Value rhs);
 
 #endif

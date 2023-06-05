@@ -24,6 +24,7 @@ typedef enum : unsigned char{
     OpJump,
     OpWriteGlobal,
     OpReadGlobal,
+    OpArray,
 } Operation;
 
 struct Instruction
@@ -33,12 +34,12 @@ struct Instruction
     ~Instruction() = default;
 };
 
-typedef struct
+struct Definition
 {
     std::string opName;
     int numOperands;
-    std::array<char, 5> operandsWidth;
-} Definition;
+    std::array<unsigned char, 5> operandsWidth;
+};
 
 static std::array<Definition, 256> opDefinitions {
     Definition{"OpConstantInt", 1, {2}},
@@ -58,6 +59,7 @@ static std::array<Definition, 256> opDefinitions {
     Definition{"OpJump", 1, {2}},
     Definition{"OpWriteGlobal", 1, {2}},
     Definition{"OpReadGlobal", 1, {2}},
+    Definition{"OpArray", 1, {2}},
 };
 
 std::vector<unsigned char> make(Operation op);
