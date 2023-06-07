@@ -271,10 +271,24 @@ void B_GC::mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<
     mark_container(globals.begin(), globals.end(), mark_stack);
     if (auto* obj = std::get_if<B_Object*>(&last_popped); obj != nullptr)
         {
-            (*obj)->set_used();
             mark_stack.push_back(*obj);
         }
-    // should now cycle inside the objects, but we still don't have objects containing other objects
+    // cycle inside the objects
+    for (uint i = 0; i < mark_stack.size(); ++i)
+    {
+        auto* obj = mark_stack[i];
+        obj->set_used();
+        if (auto* array = dynamic_cast<B_Array*>(obj))
+        {
+            for (auto val: array->values)
+            {
+                if (auto* obj_ptr = std::get_if<B_Object*>(&val); obj_ptr != nullptr && !(*obj_ptr)->used())
+                {
+                    mark_stack.push_back(*obj_ptr);
+                }
+            }
+        }
+    }
 
     // sweep the others
     for (std::vector<B_Object*>::iterator obj = allocator->memory.begin(); obj != allocator->memory.end();)
@@ -299,7 +313,6 @@ void mark_container(const InputIt it_b, const InputIt it_e, std::vector<B_Object
     {
         if (auto* obj = std::get_if<B_Object*>(&(*it)); obj != nullptr)
         {
-            (*obj)->set_used();
             mark_stack.push_back(*obj);
         }
     }

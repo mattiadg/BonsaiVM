@@ -493,6 +493,59 @@ TEST(GcTest, MarkAndSweepAssertions)
     EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[1])->value, "string1string1string1string1");
 }
 
+TEST(GcTest, MarkAndSweepRespectsArrayAssertions)
+{
+    std::shared_ptr<B_Allocator> allocator = std::make_shared<B_Allocator>();
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstant, 0),
+                make(OpConstant, 1),
+                make(OpConstant, 2),
+                make(OpConstant, 3),
+                make(OpAdd),
+                make(OpArray, 3),
+                make(OpPop),
+            }
+        ));
+    auto constants = std::vector<Value>{1, 2.0, allocator->alloc("string1"), allocator->alloc("string2")};
+    ByteCode bc {instrs, constants};
+    auto testVM = VM(bc, allocator);
+    testVM.run();
+    EXPECT_EQ(testVM.sp, 0);
+    EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[0])->value, "string1");
+    EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[1])->value, "string2");
+    EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[2])->value, "string1string2");
+    EXPECT_EQ(get_string(dynamic_cast<B_Array*>(allocator->memory[3])->values[2]), "string1string2");
+    EXPECT_EQ(testVM.bgc.allocator->memory.size(), 4);
+}
+
+TEST(GcTest, MarkAndSweepEmptyArrayAssertions)
+{
+    std::shared_ptr<B_Allocator> allocator = std::make_shared<B_Allocator>();
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstant, 0),
+                make(OpConstant, 1),
+                make(OpConstant, 2),
+                make(OpConstant, 3),
+                make(OpAdd),
+                make(OpArray, 3),
+                make(OpPop),
+                make(OpConstant, 0),
+                make(OpPop),
+            }
+        ));
+    auto constants = std::vector<Value>{1, 2.0, allocator->alloc("string1"), allocator->alloc("string2")};
+    ByteCode bc {instrs, constants};
+    auto testVM = VM(bc, allocator);
+    testVM.run();
+    EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[0])->value, "string1");
+    EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[1])->value, "string2");
+    EXPECT_EQ(testVM.bgc.allocator->memory.size(), 2);
+}
+
 std::vector<unsigned char> make_instructions(std::vector<std::vector<unsigned char>> instrs) 
 {
     std::vector<unsigned char> instructions;
