@@ -2,14 +2,14 @@
 
 #include "vm.hpp"
 
-VM::VM(B_Allocator&& alloc) 
+VM::VM(std::shared_ptr<B_Allocator> alloc) 
 : stack(std::array<Value, 256>()), constants(std::vector<Value>()), 
-instructions(std::vector<unsigned char>()), ip(0), sp(0), bgc(std::move(alloc))
+instructions(std::vector<unsigned char>()), last_popped(0), ip(0), sp(0), bgc(alloc)
 {
 }
 
-VM::VM(const ByteCode& bc, B_Allocator&& alloc)
-: stack(std::array<Value, 256>()), constants(bc.constants), instructions(bc.instructions), ip(0), sp(0), bgc(std::move(alloc))
+VM::VM(const ByteCode& bc, std::shared_ptr<B_Allocator> alloc)
+: stack(std::array<Value, 256>()), constants(bc.constants), instructions(bc.instructions), last_popped(0),  ip(0), sp(0), bgc(alloc)
 {
 
 }
@@ -30,6 +30,7 @@ Value VM::pop()
         throw empty_stack_exception();
     }
     auto v = stack[--sp];
+    last_popped = v;
     return v;
 }
 
@@ -158,7 +159,7 @@ void VM::run()
                 } else 
                 {
                     const auto start_elem = sp - num_values;
-                    B_Object* arr = bgc.allocator.alloc(stack.begin()+start_elem, stack.begin() + sp);
+                    B_Object* arr = bgc.allocator->alloc(stack.begin()+start_elem, stack.begin() + sp);
                     for (int i = 0, d = num_values; i < d; ++i)
                     {
                         pop();
@@ -171,6 +172,7 @@ void VM::run()
                 break;
             }
         ip += byte_count;
+        run_gc();
     }
 }
 
@@ -192,7 +194,7 @@ void VM::executeBinaryOp(Operation op)
             {
                 auto operand_left = std::get<B_Object*>(operand_left_);
                 auto operand_right = std::get<B_Object*>(operand_right_);
-                value = Value(bgc.allocator.alloc(dynamic_cast<B_String*>(operand_left)->value + dynamic_cast<B_String*>(operand_right)->value));
+                value = Value(bgc.allocator->alloc(dynamic_cast<B_String*>(operand_left)->value + dynamic_cast<B_String*>(operand_right)->value));
             }
             break;
         }
@@ -252,61 +254,53 @@ void VM::executeBinaryComparison(Operation op)
 
 void VM::run_gc()
 {
-    bgc.mark_and_sweep(stack, sp, constants, globals);
+    bgc.mark_and_sweep(stack, sp, constants, globals, last_popped);
 }
 
-B_GC::B_GC(B_Allocator&& alloc)
+B_GC::B_GC(std::shared_ptr<B_Allocator> alloc)
 : allocator(alloc)
 {
 }
 
-void B_GC::mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals)
+void B_GC::mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals, Value last_popped)
 {
     std::vector<B_Object*> mark_stack = {};
 
-    // seed stack
-    for (auto i = 0; i < sp; ++i)
-    {
-        if (std::holds_alternative<B_Object*>(stack[i]))
+    mark_container(stack.begin(), stack.begin() + sp, mark_stack);
+    mark_container(constants.begin(), constants.end(), mark_stack);
+    mark_container(globals.begin(), globals.end(), mark_stack);
+    if (auto* obj = std::get_if<B_Object*>(&last_popped); obj != nullptr)
         {
-            auto* obj = std::get<B_Object*>(stack[i]);
-            obj->set_used();
-            mark_stack.push_back(obj);
+            (*obj)->set_used();
+            mark_stack.push_back(*obj);
         }
-    }
-    // seed constants
-    for (uint i = 0; i < constants.size(); ++i)
-    {
-        if (std::holds_alternative<B_Object*>(constants[i]))
-        {
-            auto* obj = std::get<B_Object*>(constants[i]);
-            obj->set_used();
-            mark_stack.push_back(obj);
-        }
-    }
-    // seed globals
-    for (uint i = 0; i < globals.size(); ++i)
-    {
-        if (std::holds_alternative<B_Object*>(globals[i]))
-        {
-            auto* obj = std::get<B_Object*>(globals[i]);
-            obj->set_used();
-            mark_stack.push_back(obj);
-        }
-    }
     // should now cycle inside the objects, but we still don't have objects containing other objects
 
     // sweep the others
-    for (std::vector<B_Object*>::iterator obj = allocator.memory.begin(); obj != allocator.memory.end();)
+    for (std::vector<B_Object*>::iterator obj = allocator->memory.begin(); obj != allocator->memory.end();)
     {
         if (!(*obj)->used())
         {
             delete *obj;
-            obj = allocator.memory.erase(obj);
+            obj = allocator->memory.erase(obj);
         } else 
         {
             (*obj)->set_not_used();
             ++obj;
+        }
+    }
+}
+
+template <typename InputIt>
+requires std::input_iterator<InputIt>
+void mark_container(const InputIt it_b, const InputIt it_e, std::vector<B_Object*>& mark_stack)
+{
+    for (auto it = it_b; it < it_e; ++it)
+    {
+        if (auto* obj = std::get_if<B_Object*>(&(*it)); obj != nullptr)
+        {
+            (*obj)->set_used();
+            mark_stack.push_back(*obj);
         }
     }
 }

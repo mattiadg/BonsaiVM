@@ -3,6 +3,7 @@
 
 #include <array>
 #include <exception>
+#include <iterator>
 #include <memory>
 #include <vector>
 
@@ -19,10 +20,10 @@ struct ByteCode
 class B_GC
 {
   public:
-  B_GC(B_Allocator&&);
-  void mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals);
+  B_GC(std::shared_ptr<B_Allocator> alloc);
+  void mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals, Value last_popped);
 
-  B_Allocator& allocator;
+  std::shared_ptr<B_Allocator> allocator;
 };
 
 struct VM
@@ -32,6 +33,7 @@ struct VM
     std::vector<Value> constants;
     std::vector<unsigned char> instructions;
     std::vector<Value> globals;
+    Value last_popped;
 
     // Registers
     int64_t ip;
@@ -44,8 +46,8 @@ struct VM
     // Allocator
     B_GC bgc;
 
-    VM(B_Allocator&& alloc = B_Allocator());
-    VM(const ByteCode&, B_Allocator&& = B_Allocator());
+    VM(std::shared_ptr<B_Allocator> alloc = std::make_shared<B_Allocator>());
+    VM(const ByteCode&, std::shared_ptr<B_Allocator> alloc = std::make_shared<B_Allocator>());
 
     void push(Value);
     Value pop();
@@ -89,5 +91,9 @@ class invalid_instruction
   invalid_instruction(std::string msg) : message{msg} {}; 
   std::string what() {return message;}
 };
+
+template <typename InputIt>
+requires std::input_iterator<InputIt>
+void mark_container(const InputIt it_b, const InputIt it_e, std::vector<B_Object*>& mark_stack);
 
 #endif
