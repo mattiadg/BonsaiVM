@@ -69,7 +69,7 @@ TEST(OpTest, OpAddIntAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(std::get<int64_t>(testVM.last_popped), 5);
+    EXPECT_EQ(std::get<int64_t>(testVM.stack[testVM.sp]), 5);
     EXPECT_EQ(testVM.sp, 0);
 }
 
@@ -88,7 +88,7 @@ TEST(OpTest, OpSubIntAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(std::get<int64_t>(testVM.last_popped), 1);
+    EXPECT_EQ(std::get<int64_t>(testVM.stack[testVM.sp]), 1);
     EXPECT_EQ(testVM.sp, 0);
 }
 
@@ -107,7 +107,7 @@ TEST(OpTest, OpMulIntAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(std::get<int64_t>(testVM.last_popped), 8);
+    EXPECT_EQ(std::get<int64_t>(testVM.stack[testVM.sp]), 8);
     EXPECT_EQ(testVM.sp, 0);
 }
 
@@ -126,7 +126,7 @@ TEST(OpTest, OpDivIntAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(std::get<int64_t>(testVM.last_popped), 3);
+    EXPECT_EQ(std::get<int64_t>(testVM.stack[testVM.sp]), 3);
     EXPECT_EQ(testVM.sp, 0);
 }
 
@@ -145,7 +145,7 @@ TEST(OpTest, OpGreaterThanTrueAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, testVM.trueValue);
+    EXPECT_EQ(testVM.stack[testVM.sp], testVM.trueValue);
 }
 
 TEST(OpTest, OpGreaterThanFalseAssertions)
@@ -163,7 +163,7 @@ TEST(OpTest, OpGreaterThanFalseAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, testVM.falseValue);
+    EXPECT_EQ(testVM.stack[testVM.sp], testVM.falseValue);
 }
 
 TEST(OpTest, OpEqualTrueAssertions)
@@ -181,7 +181,7 @@ TEST(OpTest, OpEqualTrueAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, testVM.trueValue);
+    EXPECT_EQ(testVM.stack[testVM.sp], testVM.trueValue);
 }
 
 TEST(OpTest, OpEqualFalseAssertions)
@@ -199,7 +199,7 @@ TEST(OpTest, OpEqualFalseAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, testVM.falseValue);
+    EXPECT_EQ(testVM.stack[testVM.sp], testVM.falseValue);
 }
 
 TEST(OpTest, OpGreaterEqualGreaterAssertions)
@@ -217,7 +217,7 @@ TEST(OpTest, OpGreaterEqualGreaterAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, testVM.trueValue);
+    EXPECT_EQ(testVM.stack[testVM.sp], testVM.trueValue);
 }
 
 TEST(OpTest, OpGreaterEqualEqualAssertions)
@@ -235,7 +235,7 @@ TEST(OpTest, OpGreaterEqualEqualAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, testVM.trueValue);
+    EXPECT_EQ(testVM.stack[testVM.sp], testVM.trueValue);
 }
 
 TEST(OpTest, OpGreaterEqualFalseAssertions)
@@ -253,7 +253,7 @@ TEST(OpTest, OpGreaterEqualFalseAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, testVM.falseValue);
+    EXPECT_EQ(testVM.stack[testVM.sp], testVM.falseValue);
 }
 
 TEST(OpTest, OpJumpFalseWhenFalseAssertions)
@@ -296,7 +296,7 @@ TEST(OpTest, OpJumpFalseWhenTrueAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(std::get<int64_t>(testVM.last_popped), 7);
+    EXPECT_EQ(std::get<int64_t>(testVM.stack[testVM.sp]), 7);
 }
 
 TEST(OpTest, OpBangTrueAssertions)
@@ -313,7 +313,7 @@ TEST(OpTest, OpBangTrueAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, testVM.falseValue);
+    EXPECT_EQ(testVM.stack[testVM.sp], testVM.falseValue);
 }
 
 TEST(OpTest, OpBangFalseAssertions)
@@ -330,7 +330,7 @@ TEST(OpTest, OpBangFalseAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, testVM.trueValue);
+    EXPECT_EQ(testVM.stack[testVM.sp], testVM.trueValue);
 }
 
 TEST(OpTest, OpUnaryMinusAssertions)
@@ -347,7 +347,7 @@ TEST(OpTest, OpUnaryMinusAssertions)
     auto bc = ByteCode{instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    EXPECT_EQ(testVM.last_popped, Value{-5});
+    EXPECT_EQ(testVM.stack[testVM.sp], Value{-5});
 }
 
 TEST(OpTest, OpWriteGlobalAssertions)
@@ -402,7 +402,7 @@ TEST(OpTest, OpReadGlobalAssertions)
     auto testVM = VM(bc);
     testVM.run();
     EXPECT_EQ(testVM.globals[0], Value{5});
-    EXPECT_EQ(testVM.last_popped, Value{6});
+    EXPECT_EQ(testVM.stack[testVM.sp], Value{6});
 }
 
 TEST(OpTest, OpConstantStringAssertions)
@@ -411,17 +411,16 @@ TEST(OpTest, OpConstantStringAssertions)
         std::vector(
             {
                 make(OpConstant, 0),
-                make(OpPop),
             }
         )
     );
-    ByteCode bc {instrs, std::vector<Value>{new B_String{"test string"}}};
+    B_Allocator allocator {};
+    ByteCode bc {instrs, std::vector<Value>{allocator.alloc("test string")}};
     auto testVM = VM(bc);
     EXPECT_EQ(testVM.sp, 0);
     testVM.run();
-    auto string_value = get_string(testVM.last_popped);
+    auto string_value = get_string(testVM.stack[testVM.sp - 1]);
     EXPECT_EQ(string_value, "test string");
-    delete std::get<B_Object*>(testVM.last_popped);
 }
 
 TEST(OpTest, OpAddStringAssertions)
@@ -432,14 +431,14 @@ TEST(OpTest, OpAddStringAssertions)
                 make(OpConstant, 0),
                 make(OpConstant, 1),
                 make(OpAdd),
-                make(OpPop),
             }
         ));
-    auto constants = std::vector<Value>{new B_String{"string1"}, new B_String{"string2"}};
+    B_Allocator allocator {};
+    auto constants = std::vector<Value>{allocator.alloc("string1"), allocator.alloc("string2")};
     ByteCode bc {instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    auto string_value = get_string(testVM.last_popped);
+    auto string_value = get_string(testVM.stack[testVM.sp - 1]);
     EXPECT_EQ(string_value, "string1string2");
 }
 
@@ -453,14 +452,13 @@ TEST(OpTest, OpArrayAssertions)
                 make(OpConstant, 1),
                 make(OpConstant, 2),
                 make(OpArray, 3),
-                make(OpPop),
             }
         ));
     auto constants = std::vector<Value>{1, 3.5, allocator.alloc("string1")};
     ByteCode bc {instrs, constants};
     auto testVM = VM(bc);
     testVM.run();
-    auto array_value = get_array(testVM.last_popped);
+    auto array_value = get_array(testVM.stack[testVM.sp - 1]);
     EXPECT_EQ(std::get<int64_t>(array_value[0]), 1);
     EXPECT_EQ(std::get<_Float64>(array_value[1]), 3.5);
     EXPECT_EQ(get_string(array_value[2]), "string1");
@@ -479,7 +477,6 @@ TEST(GcTest, MarkAndSweepAssertions)
                 make(OpAdd),
                 make(OpAdd),
                 make(OpAdd),
-                make(OpPop),
             }
         ));
     auto constants = std::vector<Value>{allocator->alloc("string1")};
@@ -487,7 +484,7 @@ TEST(GcTest, MarkAndSweepAssertions)
     auto testVM = VM(bc, allocator);
     testVM.run();
     testVM.run_gc();
-    EXPECT_EQ(testVM.sp, 0);
+    EXPECT_EQ(testVM.sp, 1);
     EXPECT_EQ(testVM.bgc.allocator->memory.size(), 2);
     EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[0]), dynamic_cast<B_String*>(std::get<B_Object*>(testVM.constants[0])));
     EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[1])->value, "string1string1string1string1");
@@ -505,14 +502,13 @@ TEST(GcTest, MarkAndSweepRespectsArrayAssertions)
                 make(OpConstant, 3),
                 make(OpAdd),
                 make(OpArray, 3),
-                make(OpPop),
             }
         ));
     auto constants = std::vector<Value>{1, 2.0, allocator->alloc("string1"), allocator->alloc("string2")};
     ByteCode bc {instrs, constants};
     auto testVM = VM(bc, allocator);
     testVM.run();
-    EXPECT_EQ(testVM.sp, 0);
+    EXPECT_EQ(testVM.sp, 1);
     EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[0])->value, "string1");
     EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[1])->value, "string2");
     EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[2])->value, "string1string2");

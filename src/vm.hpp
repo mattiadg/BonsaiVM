@@ -21,7 +21,7 @@ class B_GC
 {
   public:
   B_GC(std::shared_ptr<B_Allocator> alloc);
-  void mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals, Value last_popped);
+  void mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals);
 
   std::shared_ptr<B_Allocator> allocator;
 };
@@ -33,7 +33,6 @@ struct VM
     std::vector<Value> constants;
     std::vector<unsigned char> instructions;
     std::vector<Value> globals;
-    Value last_popped;
 
     // Registers
     int64_t ip;

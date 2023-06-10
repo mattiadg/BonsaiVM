@@ -4,12 +4,12 @@
 
 VM::VM(std::shared_ptr<B_Allocator> alloc) 
 : stack(std::array<Value, 256>()), constants(std::vector<Value>()), 
-instructions(std::vector<unsigned char>()), last_popped(0), ip(0), sp(0), bgc(alloc)
+instructions(std::vector<unsigned char>()), ip(0), sp(0), bgc(alloc)
 {
 }
 
 VM::VM(const ByteCode& bc, std::shared_ptr<B_Allocator> alloc)
-: stack(std::array<Value, 256>()), constants(bc.constants), instructions(bc.instructions), last_popped(0),  ip(0), sp(0), bgc(alloc)
+: stack(std::array<Value, 256>()), constants(bc.constants), instructions(bc.instructions), ip(0), sp(0), bgc(alloc)
 {
 
 }
@@ -30,7 +30,6 @@ Value VM::pop()
         throw empty_stack_exception();
     }
     auto v = stack[--sp];
-    last_popped = v;
     return v;
 }
 
@@ -254,7 +253,7 @@ void VM::executeBinaryComparison(Operation op)
 
 void VM::run_gc()
 {
-    bgc.mark_and_sweep(stack, sp, constants, globals, last_popped);
+    bgc.mark_and_sweep(stack, sp, constants, globals);
 }
 
 B_GC::B_GC(std::shared_ptr<B_Allocator> alloc)
@@ -262,17 +261,13 @@ B_GC::B_GC(std::shared_ptr<B_Allocator> alloc)
 {
 }
 
-void B_GC::mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals, Value last_popped)
+void B_GC::mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<Value> constants, std::vector<Value> globals)
 {
     std::vector<B_Object*> mark_stack = {};
 
     mark_container(stack.begin(), stack.begin() + sp, mark_stack);
     mark_container(constants.begin(), constants.end(), mark_stack);
     mark_container(globals.begin(), globals.end(), mark_stack);
-    if (auto* obj = std::get_if<B_Object*>(&last_popped); obj != nullptr)
-        {
-            mark_stack.push_back(*obj);
-        }
     // cycle inside the objects
     for (uint i = 0; i < mark_stack.size(); ++i)
     {
