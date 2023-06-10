@@ -40,7 +40,7 @@ void VM::run()
     while(ip < static_cast<int64_t>(instructions.size()))
     {
         ip += offset;
-        std::cout << "ip: " << ip << std::endl;
+        std::cout << "ip: " << ip << "\n";
         auto op = instructions[ip];
         auto byte_count = 0;
         auto def = opDefinitions[op];

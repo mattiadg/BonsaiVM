@@ -12,7 +12,7 @@ std::vector<unsigned char> make(Operation op)
 std::vector<unsigned char> make(Operation op, int16_t arg)
 {
     auto bytes = std::vector<unsigned char>{static_cast<unsigned char>(op)};
-    std::cout << "arg: " << arg << std::endl;
+    std::cout << "arg: " << arg << "\n";
 
     auto def = opDefinitions[op];
     auto offset = 1;
@@ -21,7 +21,7 @@ std::vector<unsigned char> make(Operation op, int16_t arg)
     {
         case 2:
         auto op_bytes = WriteInt16(arg);
-        std::cout << "while writing, bytes: " << (int) op_bytes[0] << ", " << (int) op_bytes[1] << std::endl;
+        std::cout << "while writing, bytes: " << (int) op_bytes[0] << ", " << (int) op_bytes[1] << "\n";
         bytes.insert(bytes_it + offset, op_bytes.begin(), op_bytes.end());
         offset = 2;
     }
