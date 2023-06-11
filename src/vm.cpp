@@ -167,6 +167,32 @@ void VM::run()
                 }
                 break;
             }
+            case OpHash:
+            {
+                const auto num_values = ReadInt16({instructions[ip], instructions[ip+1]});
+                if (num_values > sp + 1)
+                {
+                    throw empty_stack_exception();
+                } else if (num_values % 2 == 1)
+                {
+                    throw invalid_value(std::string("num_values must be an even value, found " + num_values));
+                }
+                {
+                    const auto start_elem = sp - num_values;
+                    std::vector<B_HashPair> pairs{};
+                    for (auto i = start_elem; i - start_elem < num_values; i += 2)
+                    {
+                        pairs.emplace_back(stack[i], stack[i+1]);
+                    }
+                    B_Object* hm = bgc.allocator->alloc(&(*pairs.begin()), &(*pairs.end()));
+                    for (int i = 0, d = num_values; i < d; ++i)
+                    {
+                        pop();
+                    }
+                    push(hm);
+                }
+                break;
+            }
             default:
                 break;
             }
@@ -278,6 +304,21 @@ void B_GC::mark_and_sweep(std::array<Value, 256> stack, int64_t sp, std::vector<
             for (auto val: array->values)
             {
                 if (auto* obj_ptr = std::get_if<B_Object*>(&val); obj_ptr != nullptr && !(*obj_ptr)->used())
+                {
+                    mark_stack.push_back(*obj_ptr);
+                }
+            }
+        } else if (auto* h_map = dynamic_cast<B_HashMap*>(obj))
+        {
+            for (auto n : h_map->values)
+            {
+                auto key = n.second.key;
+                auto value = n.second.value;
+                if (auto* obj_ptr = std::get_if<B_Object*>(&key); obj_ptr != nullptr && !(*obj_ptr)->used())
+                {
+                    mark_stack.push_back(*obj_ptr);
+                }
+                if (auto* obj_ptr = std::get_if<B_Object*>(&value); obj_ptr != nullptr && !(*obj_ptr)->used())
                 {
                     mark_stack.push_back(*obj_ptr);
                 }

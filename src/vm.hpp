@@ -87,7 +87,25 @@ class invalid_instruction
   std::string message;
 
   public:
-  invalid_instruction(std::string msg) : message{msg} {}; 
+  invalid_instruction(std::string msg) : message(msg) {}; 
+  std::string what() {return message;}
+};
+
+class invalid_value
+{
+  std::string message;
+
+  public:
+  invalid_value(std::string msg) : message(msg) {};
+  std::string what() {return message;}
+};
+
+class not_implemented
+{
+  std::string message;
+
+  public:
+  not_implemented(std::string msg) : message(msg) {};
   std::string what() {return message;}
 };
 

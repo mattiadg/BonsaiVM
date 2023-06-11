@@ -464,6 +464,41 @@ TEST(OpTest, OpArrayAssertions)
     EXPECT_EQ(get_string(array_value[2]), "string1");
 }
 
+TEST(OpTest, OpHashAssertions)
+{
+    std::shared_ptr<B_Allocator> allocator = std::make_shared<B_Allocator>();
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstant, 0),
+                make(OpConstant, 1),
+                make(OpAdd),
+                make(OpConstant, 2),
+                make(OpConstant, 3),
+                make(OpAdd),
+                make(OpConstant, 4),
+                make(OpConstant, 5),
+                make(OpAdd),
+                make(OpConstant, 6),
+                make(OpConstant, 7),
+                make(OpAdd),
+                make(OpHash, 4),
+            }
+        ));
+    auto constants = std::vector<Value>{allocator->alloc("str1"), allocator->alloc("-key"), 0, 1, allocator->alloc("key1"), allocator->alloc("-str"), 2, 3,};
+    ByteCode bc {instrs, constants};
+    auto testVM = VM(bc, allocator);
+    testVM.run();
+    auto hash_value = get_hash(testVM.stack[testVM.sp - 1]);
+
+    B_String k1{"str1-key"};
+    B_String k2{"key1-str"};
+    EXPECT_EQ(get_string(hash_value[&k1].key), "str1-key");
+    EXPECT_EQ(std::get<int64_t>(hash_value[&k1].value), 1);
+    EXPECT_EQ(get_string(hash_value[&k2].key), "key1-str");
+    EXPECT_EQ(std::get<int64_t>(hash_value[&k2].value), 5);
+}
+
 TEST(GcTest, MarkAndSweepAssertions)
 {
     std::shared_ptr<B_Allocator> allocator = std::make_shared<B_Allocator>();
@@ -541,6 +576,36 @@ TEST(GcTest, MarkAndSweepEmptyArrayAssertions)
     EXPECT_EQ(dynamic_cast<B_String*>(allocator->memory[1])->value, "string2");
     EXPECT_EQ(testVM.bgc.allocator->memory.size(), 2);
 }
+
+TEST(OpTest, MarkAndSweepEmptyHashAssertions)
+{
+    std::shared_ptr<B_Allocator> allocator = std::make_shared<B_Allocator>();
+    auto instrs = make_instructions(
+        std::vector(
+            {
+                make(OpConstant, 0),
+                make(OpConstant, 1),
+                make(OpAdd),
+                make(OpConstant, 2),
+                make(OpConstant, 3),
+                make(OpAdd),
+                make(OpConstant, 4),
+                make(OpConstant, 5),
+                make(OpAdd),
+                make(OpConstant, 6),
+                make(OpConstant, 7),
+                make(OpAdd),
+                make(OpHash, 4),
+                make(OpPop),
+            }
+        ));
+    auto constants = std::vector<Value>{allocator->alloc("str1"), allocator->alloc("-key"), 0, 1, allocator->alloc("key1"), allocator->alloc("-str"), 2, 3,};
+    ByteCode bc {instrs, constants};
+    auto testVM = VM(bc, allocator);
+    testVM.run();
+    EXPECT_EQ(testVM.bgc.allocator->memory.size(), 4);
+}
+
 
 std::vector<unsigned char> make_instructions(std::vector<std::vector<unsigned char>> instrs) 
 {

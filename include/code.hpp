@@ -25,6 +25,7 @@ typedef enum : unsigned char{
     OpWriteGlobal,
     OpReadGlobal,
     OpArray,
+    OpHash,
 } Operation;
 
 struct Instruction
@@ -60,6 +61,7 @@ static std::array<Definition, 256> opDefinitions {
     Definition{"OpWriteGlobal", 1, {2}},
     Definition{"OpReadGlobal", 1, {2}},
     Definition{"OpArray", 1, {2}},
+    Definition{"OpHash", 1, {2}},
 };
 
 std::vector<unsigned char> make(Operation op);
