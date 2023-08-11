@@ -193,6 +193,18 @@ void VM::run()
                 }
                 break;
             }
+            case OpIndex:
+            {
+                const auto idx = pop();
+                const auto top = std::get<B_Object*>(pop());
+                if (auto* obj = dynamic_cast<B_Array*>(top))
+                {
+                    push(obj->values[std::get<int64_t>(idx)]);
+                } else if (auto* obj = dynamic_cast<B_HashMap*>(top))
+                {
+                    push(obj->values[idx].value);
+                }
+            }
             default:
                 break;
             }
